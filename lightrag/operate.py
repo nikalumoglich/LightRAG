@@ -622,6 +622,7 @@ async def kg_query(
     global_config: dict[str, str],
     hashing_kv: BaseKVStorage | None = None,
     system_prompt: str | None = None,
+    doc_ids: [str] | None = None,
 ) -> str | AsyncIterator[str]:
     # Handle cache
     use_model_func = global_config["llm_model_func"]
@@ -669,6 +670,7 @@ async def kg_query(
         relationships_vdb,
         text_chunks_db,
         query_param,
+        doc_ids
     )
 
     if query_param.only_need_context:

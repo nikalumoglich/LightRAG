@@ -1219,6 +1219,7 @@ class LightRAG:
         query: str,
         param: QueryParam = QueryParam(),
         system_prompt: str | None = None,
+        doc_ids: [str] | None = None,
     ) -> str | Iterator[str]:
         """
         Perform a sync query.
@@ -1240,6 +1241,7 @@ class LightRAG:
         query: str,
         param: QueryParam = QueryParam(),
         system_prompt: str | None = None,
+        doc_ids: [str] | None = None,
     ) -> str | AsyncIterator[str]:
         """
         Perform a async query.
@@ -1263,6 +1265,7 @@ class LightRAG:
                 asdict(self),
                 hashing_kv=self.llm_response_cache,  # Directly use llm_response_cache
                 system_prompt=system_prompt,
+                doc_ids,
             )
         elif param.mode == "naive":
             response = await naive_query(
@@ -1885,6 +1888,7 @@ class LightRAG:
                 logger.info("Cleared all cache")
 
             await self.llm_response_cache.index_done_callback()
+            self.__post_init__()
 
         except Exception as e:
             logger.error(f"Error while clearing cache: {e}")
