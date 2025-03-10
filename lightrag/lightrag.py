@@ -272,13 +272,13 @@ class LightRAG:
         )
 
         # Handle deprecated parameters
-        if self.log_level is not None:
+        if hasattr(self, "log_level") and self.log_level is not None:
             warnings.warn(
                 "WARNING: log_level parameter is deprecated, use setup_logger in utils.py instead",
                 UserWarning,
                 stacklevel=2,
             )
-        if self.log_file_path is not None:
+        if hasattr(self, "log_file_path") and self.log_file_path is not None:
             warnings.warn(
                 "WARNING: log_file_path parameter is deprecated, use setup_logger in utils.py instead",
                 UserWarning,
