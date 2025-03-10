@@ -1858,7 +1858,6 @@ class LightRAG:
             raise ValueError(f"Invalid mode. Valid modes are: {valid_modes}")
 
         try:
-            self.__post_init__()
             # Reset the cache storage for specified mode
             if modes:
                 await self.llm_response_cache.delete(modes)
