@@ -1382,6 +1382,7 @@ async def _get_edge_data(
     relationships_vdb: BaseVectorStorage,
     text_chunks_db: BaseKVStorage,
     query_param: QueryParam,
+    doc_ids: [str] | None = None,
 ):
     logger.info(
         f"Query edges: {keywords}, top_k: {query_param.top_k}, cosine: {relationships_vdb.cosine_better_than_threshold}"
@@ -1427,7 +1428,7 @@ async def _get_edge_data(
             edge_datas, query_param, knowledge_graph_inst
         ),
         _find_related_text_unit_from_relationships(
-            edge_datas, query_param, text_chunks_db, knowledge_graph_inst
+            edge_datas, query_param, text_chunks_db, knowledge_graph_inst, doc_ids
         ),
     )
     logger.info(
@@ -1543,6 +1544,7 @@ async def _find_related_text_unit_from_relationships(
     query_param: QueryParam,
     text_chunks_db: BaseKVStorage,
     knowledge_graph_inst: BaseGraphStorage,
+    doc_ids: [str] | None = None,
 ):
     text_units = [
         split_string_by_multi_markers(dp["source_id"], [GRAPH_FIELD_SEP])
@@ -1563,7 +1565,11 @@ async def _find_related_text_unit_from_relationships(
     tasks = []
     for index, unit_list in enumerate(text_units):
         for c_id in unit_list:
-            tasks.append(fetch_chunk_data(c_id, index))
+            if doc_ids:
+                if c_id in doc_ids:
+                    tasks.append(fetch_chunk_data(c_id, index))
+            else:
+                tasks.append(fetch_chunk_data(c_id, index))
 
     await asyncio.gather(*tasks)
 
