@@ -271,26 +271,6 @@ class LightRAG:
             initialize_share_data,
         )
 
-        # Handle deprecated parameters
-        if hasattr(self, "log_level") and self.log_level is not None:
-            warnings.warn(
-                "WARNING: log_level parameter is deprecated, use setup_logger in utils.py instead",
-                UserWarning,
-                stacklevel=2,
-            )
-        if hasattr(self, "log_file_path") and self.log_file_path is not None:
-            warnings.warn(
-                "WARNING: log_file_path parameter is deprecated, use setup_logger in utils.py instead",
-                UserWarning,
-                stacklevel=2,
-            )
-
-        # Remove these attributes to prevent their use
-        if hasattr(self, "log_level"):
-            delattr(self, "log_level")
-        if hasattr(self, "log_file_path"):
-            delattr(self, "log_file_path")
-
         initialize_share_data()
 
         if not os.path.exists(self.working_dir):
