@@ -386,9 +386,7 @@ class PGKVStorage(BaseKVStorage):
         await self.db.execute(drop_sql)
 
     async def delete(self, modes) -> None:
-        """Drop the storage"""
-        drop_sql = SQL_TEMPLATES["drop_all"]
-        await self.db.execute(drop_sql)
+        print("Trying to delete PGKVStorage")
 
 
 @final

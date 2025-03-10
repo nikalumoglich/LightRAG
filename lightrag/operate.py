@@ -1038,6 +1038,7 @@ async def _build_query_context(
     relationships_vdb: BaseVectorStorage,
     text_chunks_db: BaseKVStorage,
     query_param: QueryParam,
+    doc_ids: [str] | None = None,
 ):
     logger.info(f"Process {os.getpid()} buidling query context...")
     if query_param.mode == "local":
@@ -1047,6 +1048,7 @@ async def _build_query_context(
             entities_vdb,
             text_chunks_db,
             query_param,
+            doc_ids
         )
     elif query_param.mode == "global":
         entities_context, relations_context, text_units_context = await _get_edge_data(
@@ -1055,6 +1057,7 @@ async def _build_query_context(
             relationships_vdb,
             text_chunks_db,
             query_param,
+            doc_ids
         )
     else:  # hybrid mode
         ll_data, hl_data = await asyncio.gather(
@@ -1071,6 +1074,7 @@ async def _build_query_context(
                 relationships_vdb,
                 text_chunks_db,
                 query_param,
+                doc_ids
             ),
         )
 
@@ -1118,6 +1122,7 @@ async def _get_node_data(
     entities_vdb: BaseVectorStorage,
     text_chunks_db: BaseKVStorage,
     query_param: QueryParam,
+    doc_ids: [str] | None = None,
 ):
     # get similar entities
     logger.info(
@@ -1147,7 +1152,7 @@ async def _get_node_data(
     # get entitytext chunk
     use_text_units, use_relations = await asyncio.gather(
         _find_most_related_text_unit_from_entities(
-            node_datas, query_param, text_chunks_db, knowledge_graph_inst
+            node_datas, query_param, text_chunks_db, knowledge_graph_inst, doc_ids
         ),
         _find_most_related_edges_from_entities(
             node_datas, query_param, knowledge_graph_inst
@@ -1238,6 +1243,7 @@ async def _find_most_related_text_unit_from_entities(
     query_param: QueryParam,
     text_chunks_db: BaseKVStorage,
     knowledge_graph_inst: BaseGraphStorage,
+    doc_ids: [str] | None = None,
 ):
     text_units = [
         split_string_by_multi_markers(dp["source_id"], [GRAPH_FIELD_SEP])
@@ -1271,7 +1277,11 @@ async def _find_most_related_text_unit_from_entities(
         for c_id in this_text_units:
             if c_id not in all_text_units_lookup:
                 all_text_units_lookup[c_id] = index
-                tasks.append((c_id, index, this_edges))
+                if doc_ids:
+                    if c_id in doc_ids:
+                        tasks.append((c_id, index, this_edges))
+                else
+                    tasks.append((c_id, index, this_edges))
 
     results = await asyncio.gather(
         *[text_chunks_db.get_by_id(c_id) for c_id, _, _ in tasks]
