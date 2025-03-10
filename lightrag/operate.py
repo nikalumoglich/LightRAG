@@ -1280,7 +1280,7 @@ async def _find_most_related_text_unit_from_entities(
                 if doc_ids:
                     if c_id in doc_ids:
                         tasks.append((c_id, index, this_edges))
-                else
+                else:
                     tasks.append((c_id, index, this_edges))
 
     results = await asyncio.gather(
