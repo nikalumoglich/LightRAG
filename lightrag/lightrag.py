@@ -1263,9 +1263,9 @@ class LightRAG:
                 self.text_chunks,
                 param,
                 asdict(self),
+                doc_ids=doc_ids,
                 hashing_kv=self.llm_response_cache,  # Directly use llm_response_cache
                 system_prompt=system_prompt,
-                doc_ids,
             )
         elif param.mode == "naive":
             response = await naive_query(
@@ -1878,6 +1878,7 @@ class LightRAG:
             raise ValueError(f"Invalid mode. Valid modes are: {valid_modes}")
 
         try:
+            self.__post_init__()
             # Reset the cache storage for specified mode
             if modes:
                 await self.llm_response_cache.delete(modes)
@@ -1888,7 +1889,7 @@ class LightRAG:
                 logger.info("Cleared all cache")
 
             await self.llm_response_cache.index_done_callback()
-            self.__post_init__()
+            
 
         except Exception as e:
             logger.error(f"Error while clearing cache: {e}")
