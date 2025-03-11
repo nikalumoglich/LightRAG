@@ -886,55 +886,21 @@ class LightRAG:
                                 full_docs_task,
                                 text_chunks_task,
                             ]
-                            try:
-                                await asyncio.gather(*tasks)
-                                await self.doc_status.upsert(
-                                    {
-                                        doc_id: {
-                                            "status": DocStatus.PROCESSED,
-                                            "chunks_count": len(chunks),
-                                            "content": status_doc.content,
-                                            "content_summary": status_doc.content_summary,
-                                            "content_length": status_doc.content_length,
-                                            "created_at": status_doc.created_at,
-                                            "updated_at": datetime.now().isoformat(),
-                                        }
+                            await asyncio.gather(*tasks)
+                            await self.doc_status.upsert(
+                                {
+                                    doc_id: {
+                                        "status": DocStatus.PROCESSED,
+                                        "chunks_count": len(chunks),
+                                        "content": status_doc.content,
+                                        "content_summary": status_doc.content_summary,
+                                        "content_length": status_doc.content_length,
+                                        "created_at": status_doc.created_at,
+                                        "updated_at": datetime.now().isoformat(),
                                     }
-                                )
-                            except Exception as e:
-                                # Log error and update pipeline status
-                                error_msg = (
-                                    f"Failed to process document {doc_id}: {str(e)}"
-                                )
-                                logger.error(error_msg)
-                                pipeline_status["latest_message"] = error_msg
-                                pipeline_status["history_messages"].append(error_msg)
-
-                                # Cancel other tasks as they are no longer meaningful
-                                for task in [
-                                    chunks_vdb_task,
-                                    entity_relation_task,
-                                    full_docs_task,
-                                    text_chunks_task,
-                                ]:
-                                    if not task.done():
-                                        task.cancel()
-
-                                # Update document status to failed
-                                await self.doc_status.upsert(
-                                    {
-                                        doc_id: {
-                                            "status": DocStatus.FAILED,
-                                            "error": str(e),
-                                            "content": status_doc.content,
-                                            "content_summary": status_doc.content_summary,
-                                            "content_length": status_doc.content_length,
-                                            "created_at": status_doc.created_at,
-                                            "updated_at": datetime.now().isoformat(),
-                                        }
-                                    }
-                                )
-                                continue
+                                }
+                            )
+                            
                         log_message = (
                             f"Completed batch {batch_idx + 1} of {len(docs_batches)}."
                         )
@@ -987,20 +953,16 @@ class LightRAG:
     async def _process_entity_relation_graph(
         self, chunk: dict[str, Any], pipeline_status=None, pipeline_status_lock=None
     ) -> None:
-        try:
-            await extract_entities(
-                chunk,
-                knowledge_graph_inst=self.chunk_entity_relation_graph,
-                entity_vdb=self.entities_vdb,
-                relationships_vdb=self.relationships_vdb,
-                global_config=asdict(self),
-                pipeline_status=pipeline_status,
-                pipeline_status_lock=pipeline_status_lock,
-                llm_response_cache=self.llm_response_cache,
-            )
-        except Exception as e:
-            logger.error("Failed to extract entities and relationships")
-            raise e
+        await extract_entities(
+            chunk,
+            knowledge_graph_inst=self.chunk_entity_relation_graph,
+            entity_vdb=self.entities_vdb,
+            relationships_vdb=self.relationships_vdb,
+            global_config=asdict(self),
+            pipeline_status=pipeline_status,
+            pipeline_status_lock=pipeline_status_lock,
+            llm_response_cache=self.llm_response_cache,
+        )
 
     async def _insert_done(
         self, pipeline_status=None, pipeline_status_lock=None

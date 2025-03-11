@@ -1067,6 +1067,7 @@ async def _build_query_context(
                 entities_vdb,
                 text_chunks_db,
                 query_param,
+                doc_ids
             ),
             _get_edge_data(
                 hl_keywords,
@@ -1277,7 +1278,7 @@ async def _find_most_related_text_unit_from_entities(
         for c_id in this_text_units:
             if c_id not in all_text_units_lookup:
                 all_text_units_lookup[c_id] = index
-                if doc_ids:
+                if doc_ids and False:
                     if c_id in doc_ids:
                         tasks.append((c_id, index, this_edges))
                 else:
@@ -1565,7 +1566,7 @@ async def _find_related_text_unit_from_relationships(
     tasks = []
     for index, unit_list in enumerate(text_units):
         for c_id in unit_list:
-            if doc_ids:
+            if doc_ids and False:
                 if c_id in doc_ids:
                     tasks.append(fetch_chunk_data(c_id, index))
             else:

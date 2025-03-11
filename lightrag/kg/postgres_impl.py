@@ -43,6 +43,9 @@ from asyncpg import Pool  # type: ignore
 
 
 class PostgreSQLDB:
+    def set_workspace(self, workspace):
+        self.workspace = workspace
+
     def __init__(self, config: dict[str, Any], **kwargs: Any):
         self.host = config.get("host", "localhost")
         self.port = config.get("port", 5432)
@@ -217,7 +220,7 @@ class ClientManager:
             ),
             "workspace": os.environ.get(
                 "POSTGRES_WORKSPACE",
-                config.get("postgres", "workspace", fallback="default"),
+                config.get("postgres", "workspace", fallback="workspace"),
             ),
         }
 
@@ -259,8 +262,11 @@ class PGKVStorage(BaseKVStorage):
         self._max_batch_size = self.global_config["embedding_batch_num"]
 
     async def initialize(self):
+        namespace_prefix = self.global_config.get("namespace_prefix")
+
         if self.db is None:
             self.db = await ClientManager.get_client()
+        self.db.set_workspace(namespace_prefix)
 
     async def finalize(self):
         if self.db is not None:
@@ -386,7 +392,7 @@ class PGKVStorage(BaseKVStorage):
         await self.db.execute(drop_sql)
 
     async def delete(self, modes) -> None:
-        print("Trying to delete PGKVStorage")
+        pass # print("Trying to delete PGKVStorage")
 
 
 @final
@@ -407,8 +413,10 @@ class PGVectorStorage(BaseVectorStorage):
         self.cosine_better_than_threshold = cosine_threshold
 
     async def initialize(self):
+        namespace_prefix = self.global_config.get("namespace_prefix")
         if self.db is None:
             self.db = await ClientManager.get_client()
+        self.db.set_workspace(namespace_prefix)
 
     async def finalize(self):
         if self.db is not None:
@@ -620,8 +628,10 @@ class PGDocStatusStorage(DocStatusStorage):
     db: PostgreSQLDB = field(default=None)
 
     async def initialize(self):
+        namespace_prefix = self.global_config.get("namespace_prefix")
         if self.db is None:
             self.db = await ClientManager.get_client()
+        self.db.set_workspace(namespace_prefix)
 
     async def finalize(self):
         if self.db is not None:
@@ -778,8 +788,10 @@ class PGGraphStorage(BaseGraphStorage):
         self.db: PostgreSQLDB | None = None
 
     async def initialize(self):
+        namespace_prefix = self.global_config.get("namespace_prefix")
         if self.db is None:
             self.db = await ClientManager.get_client()
+        self.db.set_workspace(namespace_prefix)
 
     async def finalize(self):
         if self.db is not None:
@@ -888,7 +900,7 @@ class PGGraphStorage(BaseGraphStorage):
                             vertices.get(edge["end_id"], {}),
                         )
             else:
-                if v is None or (v.count("{") < 1 and v.count("[") < 1):
+                if v is None or not isinstance(v, str) or (v.count("{") < 1 and v.count("[") < 1):
                     d[k] = v
                 else:
                     d[k] = json.loads(v) if isinstance(v, str) else v
