@@ -57,6 +57,9 @@ class PostgreSQLDB:
         if self.user is None or self.password is None or self.database is None:
             raise ValueError("Missing database user, password, or database")
 
+    def set_workspace(self, workspace):
+        self.workspace = workspace
+
     async def initdb(self):
         try:
             self.pool = await asyncpg.create_pool(  # type: ignore
@@ -258,6 +261,9 @@ class PGKVStorage(BaseKVStorage):
         self.base_namespace = self.namespace.replace(namespace_prefix, "")
         self._max_batch_size = self.global_config["embedding_batch_num"]
 
+    def set_workspace(self, workspace):
+        self.db.set_workspace(workspace)
+
     async def initialize(self):
         if self.db is None:
             self.db = await ClientManager.get_client()
@@ -402,6 +408,9 @@ class PGVectorStorage(BaseVectorStorage):
                 "cosine_better_than_threshold must be specified in vector_db_storage_cls_kwargs"
             )
         self.cosine_better_than_threshold = cosine_threshold
+
+    def set_workspace(self, workspace):
+        self.db.set_workspace(workspace)
 
     async def initialize(self):
         if self.db is None:
@@ -681,6 +690,9 @@ class PGVectorStorage(BaseVectorStorage):
 class PGDocStatusStorage(DocStatusStorage):
     db: PostgreSQLDB = field(default=None)
 
+    def set_workspace(self, workspace):
+        self.db.set_workspace(workspace)
+
     async def initialize(self):
         if self.db is None:
             self.db = await ClientManager.get_client()
@@ -832,6 +844,10 @@ class PGGraphQueryException(Exception):
 @final
 @dataclass
 class PGGraphStorage(BaseGraphStorage):
+
+    def set_workspace(self, workspace):
+        self.db.set_workspace(workspace)
+
     def __post_init__(self):
         self.graph_name = self.namespace or os.environ.get("AGE_GRAPH_NAME", "lightrag")
         self._node_embed_algorithms = {

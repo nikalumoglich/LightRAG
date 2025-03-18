@@ -425,6 +425,18 @@ class LightRAG:
         if self.auto_manage_storages_states:
             self._run_async_safely(self.initialize_storages, "Storage Initialization")
 
+    def set_workspace(self, workspace):
+        self.workspace = workspace
+
+        self.llm_response_cache.set_workspace(self.workspace)
+        self.full_docs.set_workspace(self.workspace)
+        self.text_chunks.set_workspace(self.workspace)
+        self.chunk_entity_relation_graph.set_workspace(self.workspace)
+        self.entities_vdb.set_workspace(self.workspace)
+        self.relationships_vdb.set_workspace(self.workspace)
+        self.chunks_vdb.set_workspace(self.workspace)
+        self.doc_status.set_workspace(self.workspace)
+
     def __del__(self):
         if self.auto_manage_storages_states:
             self._run_async_safely(self.finalize_storages, "Storage Finalization")
